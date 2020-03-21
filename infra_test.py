@@ -1,6 +1,5 @@
 from unittest import TestCase
 import pytest
-import json
 
 
 @pytest.mark.usefixtures("host")

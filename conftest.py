@@ -3,6 +3,8 @@ import subprocess
 import os
 import testinfra
 import logging
+import docker
+import json
 
 DOCKER_IMAGE_NAME = 'eeacms/hello:latest'
 
@@ -11,7 +13,9 @@ logger.setLevel(logging.DEBUG)
 
 # scope='session' uses the same container for all the tests;
 # scope='function' uses a new container per test function.
-@pytest.fixture(scope='class')
+# @pytest.fixture(scope='class')
+
+
 def host(request):
     # run a container
     print("Starting Docker container...")
@@ -33,3 +37,19 @@ def host(request):
 
     print(f"Removing container: ${docker_id}")
     subprocess.check_call(['docker', 'rm', '-f', docker_id])
+
+
+@pytest.fixture(scope='class')
+def host(request):
+    client = docker.from_env()
+    container = client.containers.run(
+        DOCKER_IMAGE_NAME,
+        detach=True,
+        remove=True,
+    )
+
+    print(f"container.id: ${container.id}")
+    host = testinfra.get_host("docker://" + container.id)
+    request.cls.host = host
+    yield host
+    container.stop()
